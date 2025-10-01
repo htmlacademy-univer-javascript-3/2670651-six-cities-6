@@ -1,4 +1,4 @@
-interface PriceCardProps {
+export interface PriceCardProps {
   price: number;
   type: string;
   title: string;
