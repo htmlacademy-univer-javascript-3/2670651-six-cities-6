@@ -17,8 +17,7 @@ export function App() {
     <BrowserRouter >
       <Routes>
         <Route path="/" element={<Main rentSuggestionCounter={offers.length} />} />
-        <Route path="/about" element={<Login />} />
-        <Route path="/favourites" element={<Favorites />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/offer/:id" element={<ProductWrapper />} />
         <Route
           path="/favourites"
