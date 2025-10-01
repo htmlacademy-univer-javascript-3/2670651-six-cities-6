@@ -1,6 +1,6 @@
-export default function Offer(): JSX.Element {
+export default function Offer({id}: {id: string | undefined}): JSX.Element {
   return (
-    <div className="page">
+    <div className="page" id={id}>
       <main className="page__main page__main--offer">
         <section className="offer">
           <div className="offer__gallery-container container">
