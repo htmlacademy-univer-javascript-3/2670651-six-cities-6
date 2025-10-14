@@ -1,4 +1,4 @@
-export default function Property(): JSX.Element {
+export function PropertyPageNotLogged(): JSX.Element {
   return (
     <div className="page">
       <main className="page__main page__main--property">

@@ -1,4 +1,4 @@
-export default function MainEmpty(): JSX.Element {
+export function MainEmpty(): JSX.Element {
   return (
     <main className="page__main page__main--index page__main--index-empty">
       <h1 className="visually-hidden">Cities</h1>

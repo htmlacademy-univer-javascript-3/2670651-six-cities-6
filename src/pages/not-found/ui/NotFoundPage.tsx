@@ -1,4 +1,4 @@
-export default function NotFound() {
+export function NotFoundPage() {
   return (
     <div className="page page--gray page--login">
       <main className="page__main page__main--login">

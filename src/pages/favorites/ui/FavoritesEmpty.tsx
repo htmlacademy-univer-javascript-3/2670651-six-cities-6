@@ -1,4 +1,4 @@
-export default function FavoritesEmpty(): JSX.Element {
+export function FavoritesEmpty(): JSX.Element {
   return (
     <div className="page page--favorites-empty">
       <main className="page__main page__main--favorites page__main--favorites-empty">

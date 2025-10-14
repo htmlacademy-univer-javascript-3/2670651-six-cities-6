@@ -2,7 +2,7 @@ export interface PriceCardProps {
   price: number;
   type: string;
   title: string;
-  image: string;
+  previewImage: string;
   isPremium?: boolean;
   isBookmarked?: boolean;
   rating: number; // от 0 до 5
@@ -12,7 +12,7 @@ export default function PriceCard({
   price,
   type,
   title,
-  image,
+  previewImage,
   isPremium = false,
   isBookmarked = false,
   rating,
@@ -28,7 +28,7 @@ export default function PriceCard({
         <a href="#">
           <img
             className="place-card__image"
-            src={image}
+            src={previewImage}
             width={260}
             height={200}
             alt={title}

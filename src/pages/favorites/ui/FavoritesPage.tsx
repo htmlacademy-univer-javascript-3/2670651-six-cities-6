@@ -1,4 +1,4 @@
-export default function Favorites(): JSX.Element {
+export function FavoritesPage(): JSX.Element {
   return (
     <div className="page">
       <main className="page__main page__main--favorites">
