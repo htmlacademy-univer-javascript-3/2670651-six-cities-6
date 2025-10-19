@@ -1,34 +1,35 @@
-import PriceCard from '../../../components/shared/price-card';
-import { offers } from '../../../mock/offers';
 
-interface AppProps {
-  rentSuggestionCounter: number;
-}
 
-export function MainPage({ rentSuggestionCounter }: AppProps): JSX.Element {
+import { Offer } from '../../offers/model/types/offer';
+import OffersComponent from '../../offers/ui/OffersComponent';
 
+export function MainPage({ offers }: { offers: Offer[] }): JSX.Element {
   return (
     <div className="page page--gray page--main">
-
       <main className="page__main page__main--index">
         <h1 className="visually-hidden">Cities</h1>
         <div className="tabs">
           <section className="locations container">
             <ul className="locations__list tabs__list">
-              {['Paris', 'Cologne', 'Brussels', 'Amsterdam', 'Hamburg', 'Dusseldorf'].map(
-                (city) => (
-                  <li className="locations__item" key={Math.random().toString()}>
-                    <a
-                      className={`locations__item-link tabs__item ${
-                        city === 'Amsterdam' ? 'tabs__item--active' : ''
-                      }`}
-                      href="#"
-                    >
-                      <span>{city}</span>
-                    </a>
-                  </li>
-                )
-              )}
+              {[
+                'Paris',
+                'Cologne',
+                'Brussels',
+                'Amsterdam',
+                'Hamburg',
+                'Dusseldorf',
+              ].map((city) => (
+                <li className="locations__item" key={Math.random().toString()}>
+                  <a
+                    className={`locations__item-link tabs__item ${
+                      city === 'Amsterdam' ? 'tabs__item--active' : ''
+                    }`}
+                    href="#"
+                  >
+                    <span>{city}</span>
+                  </a>
+                </li>
+              ))}
             </ul>
           </section>
         </div>
@@ -37,7 +38,8 @@ export function MainPage({ rentSuggestionCounter }: AppProps): JSX.Element {
             <section className="cities__places places">
               <h2 className="visually-hidden">Places</h2>
               <b className="places__found">
-                {rentSuggestionCounter} place{rentSuggestionCounter > 1 ? 's' : ''} to stay in Amsterdam
+                {offers.length} place{offers.length > 1 ? 's' : ''} to stay in
+                Amsterdam
               </b>
               <form className="places__sorting" action="#" method="get">
                 <span className="places__sorting-caption">Sort by</span>
@@ -65,11 +67,7 @@ export function MainPage({ rentSuggestionCounter }: AppProps): JSX.Element {
                   </li>
                 </ul>
               </form>
-              <div className="cities__places-list places__list tabs__content">
-                {offers.map((offer) => (
-                  <PriceCard key={offer.id} {...offer} />
-                ))}
-              </div>
+              <OffersComponent offers={offers} />
             </section>
             <div className="cities__right-section">
               <section className="cities__map map"></section>
