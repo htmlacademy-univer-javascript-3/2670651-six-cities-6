@@ -1,4 +1,4 @@
-export default function Offer(): JSX.Element {
+export function OffersPageNotLogged(): JSX.Element {
   return (
     <div className="page">
       <main className="page__main page__main--offer">

@@ -1,4 +1,6 @@
-export default function Login(): JSX.Element {
+
+export function LoginPage(): JSX.Element {
+
   return (
     <div className="page page--gray page--login">
       <main className="page__main page__main--login">
@@ -7,7 +9,9 @@ export default function Login(): JSX.Element {
             <h1 className="login__title">Sign in</h1>
             <form className="login__form form" action="#" method="post">
               <div className="login__input-wrapper form__input-wrapper">
-                <label className="visually-hidden" htmlFor="email">E-mail</label>
+                <label className="visually-hidden" htmlFor="email">
+                  E-mail
+                </label>
                 <input
                   className="login__input form__input"
                   type="email"
@@ -18,7 +22,9 @@ export default function Login(): JSX.Element {
                 />
               </div>
               <div className="login__input-wrapper form__input-wrapper">
-                <label className="visually-hidden" htmlFor="password">Password</label>
+                <label className="visually-hidden" htmlFor="password">
+                  Password
+                </label>
                 <input
                   className="login__input form__input"
                   type="password"
@@ -28,7 +34,9 @@ export default function Login(): JSX.Element {
                   required
                 />
               </div>
-              <button className="login__submit form__submit button" type="submit">
+              <button
+                className="login__submit form__submit button"
+              >
                 Sign in
               </button>
             </form>

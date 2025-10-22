@@ -1,4 +1,4 @@
-export default function Property(): JSX.Element {
+export function PropertyPage(): JSX.Element {
   return (
     <main className="page__main page__main--property">
       <section className="property">
