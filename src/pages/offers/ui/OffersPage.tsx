@@ -1,18 +1,40 @@
 import { useEffect, useState } from 'react';
 import { OfferPage } from '../model/types/offers-page';
-import { commentsApi, offersApi } from '../../../shared/api/client';
+import { offersApi } from '../../../shared/api/client';
 import { formatPrice } from '../../../shared/lib/formatPrice';
 import { Offer } from '../model/types/offer';
 import PriceCard from './OffersCard';
-import { Review } from '../model/types/comments';
-import { isAxiosError } from 'axios';
-import CommentCard from './CommentCard';
-import CommentForm from './CommentForm';
+
+import CommentForm from '../../../shared/ui/Comment/CommentForm';
+import CommentList from '../../../shared/ui/Comment/CommentList';
+import Map from '../../../shared/ui/LeafletMap/ui/LeafletMap';
+import { CITY_MAP, CityKey } from '../../main/consts/consts';
+
+import { getNearestCity } from '../../../shared/lib/map/get-nearest-city';
+import { Point } from '../../../shared/types/map';
+// заглушка для авторизации
+const isAuthenticated = true;
 
 export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
   const [offer, setOffer] = useState<OfferPage | null>(null);
   const [nearbyOffers, setNearbyOffers] = useState<Offer[] | null>(null);
-  const [comments, setComments] = useState<Review[] | null>(null);
+
+  const [currentCityKey, setCurrentCityKey] = useState<CityKey>('AMSTERDAM');
+  const [currentCity, setCurrentCity] = useState(CITY_MAP[currentCityKey]);
+  const [selectedPoint, setSelectedPoint] = useState<Point | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    const def = CITY_MAP[currentCityKey];
+    const nearest = getNearestCity(def.lat, def.lng);
+    setCurrentCityKey(nearest.key);
+    setCurrentCity(nearest);
+  }, []);
+
+  useEffect(() => {
+    setCurrentCity(CITY_MAP[currentCityKey]);
+  }, [currentCityKey]);
 
   useEffect(() => {
     offersApi
@@ -23,23 +45,18 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
 
     offersApi
       .getNearbyOffers(id || '')
-      .then((response) => setNearbyOffers(response))
+      .then((response) => {
+        setNearbyOffers(response);
+
+        setSelectedPoint({
+          title: currentCity.title,
+          lat: currentCity.lat,
+          lng: currentCity.lng,
+        });
+      })
       // eslint-disable-next-line no-console
       .catch((error) => console.log(error));
-
-    commentsApi
-      .getCommentById(id || '')
-      .then((response) => setComments(response))
-      // eslint-disable-next-line no-console
-      .catch((error) => {
-        if (isAxiosError(error) && error?.response?.status === 404) {
-          setComments([]);
-        } else {
-          // eslint-disable-next-line no-console
-          console.log(error);
-        }
-      });
-  }, [id]);
+  }, [id, currentCityKey]);
 
   return (
     <div className="page" id={offer?.id}>
@@ -141,25 +158,29 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
                   )}
                 </div>
               </div>
-              {!!comments?.length && (
-                <section className="offer__reviews reviews">
-                  <h2 className="reviews__title">
-                    Reviews &middot;{' '}
-                    <span className="reviews__amount">{comments.length}</span>
-                  </h2>
-                  <ul className="reviews__list">
-                    {comments.map((comment) => (
-                      <CommentCard key={comment.id} comment={comment} />
-                    ))}
-                  </ul>
+              <CommentList id={offer?.id} />
+
+              {isAuthenticated && (
+                <section style={{ marginBottom: '2rem' }}>
+                  <CommentForm />
                 </section>
               )}
-              <section>
-                <CommentForm />
-              </section>
             </div>
           </div>
-          <section className="offer__map map"></section>
+          <section className="offer__map map">
+            {!!nearbyOffers?.length && (
+              <Map
+                city={currentCity}
+                points={nearbyOffers.map((item) => ({
+                  title: item.city.name,
+                  lat: item.location.latitude,
+                  lng: item.location.longitude,
+                }))}
+                selectedPoint={selectedPoint}
+                onMarkerClick={setSelectedPoint}
+              />
+            )}
+          </section>
         </section>
         <div className="container">
           <section className="near-places places">

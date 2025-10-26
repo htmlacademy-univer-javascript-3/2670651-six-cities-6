@@ -2,13 +2,21 @@ import { useEffect, useState } from 'react';
 
 import PriceCard from '../../offers/ui/OffersCard';
 import { Offer } from '../../offers/model/types/offer';
-interface FavoritesPageProps {
-  offers: Offer[];
-}
+import { offersApi } from '../../../shared/api/client';
 
-export function FavoritesPage({ offers }: FavoritesPageProps): JSX.Element {
+export function FavoritesPage(): JSX.Element {
   const [currentOffer, setCurrentOffer] = useState<Offer | null>(null);
+  const [apiData, setApiData] = useState<Offer[]>([]);
 
+  useEffect(() => {
+    offersApi
+      .getAllOffers()
+      .then((response) => setApiData(response))
+      .catch((error) => {
+        // eslint-disable-next-line no-console
+        console.log(error);
+      });
+  }, []);
   useEffect(() => {
     if (currentOffer) {
       // eslint-disable-next-line no-console
@@ -31,11 +39,11 @@ export function FavoritesPage({ offers }: FavoritesPageProps): JSX.Element {
                   </div>
                 </div>
                 <div className="favorites__places">
-                  {offers.filter(
+                  {apiData.filter(
                     (offer) => offer?.city?.name === 'Amsterdam'
                     // && offer.isFavorite
                   ).length &&
-                    offers
+                    apiData
                       .slice(0, 3)
                       .map((offer) => (
                         <PriceCard
@@ -57,11 +65,11 @@ export function FavoritesPage({ offers }: FavoritesPageProps): JSX.Element {
                   </div>
                 </div>
                 <div className="favorites__places ">
-                  {offers.filter(
+                  {apiData.filter(
                     (offer) => offer?.city?.name === 'Cologne'
                     // && offer.isFavorite
                   ).length &&
-                    offers
+                    apiData
                       .slice(0, 3)
                       .map((offer) => (
                         <PriceCard isHorizontal {...offer} key={offer.id} />

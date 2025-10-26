@@ -1,4 +1,4 @@
-import { Review } from '../model/types/comments';
+import { Review } from '../../types/comments';
 
 export default function CommentCard({ comment }: { comment: Review }) {
   return (

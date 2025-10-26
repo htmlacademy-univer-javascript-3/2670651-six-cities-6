@@ -13,4 +13,5 @@ export interface Review {
 export interface CommentDTO {
   comment: string;
   rating: number;
+  isFormValid?: boolean;
 }
