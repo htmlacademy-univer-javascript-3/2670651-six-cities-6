@@ -1,9 +1,29 @@
-
-
+import { useEffect, useState } from 'react';
+import Map from '../../../shared/ui/LeafletMap/ui/LeafletMap';
 import { Offer } from '../../offers/model/types/offer';
 import OffersComponent from '../../offers/ui/OffersComponent';
+import { getNearestCity } from '../../../shared/lib/map/get-nearest-city';
+import { pinList } from '../../../mock/pin-list';
+import type { CityKey, Point } from '../../../shared/types/map';
+import { CITY_KEYS, CITY_MAP } from '../consts/consts';
+
 
 export function MainPage({ offers }: { offers: Offer[] }): JSX.Element {
+  const [currentCityKey, setCurrentCityKey] = useState<CityKey>('AMSTERDAM');
+  const [currentCity, setCurrentCity] = useState(CITY_MAP[currentCityKey]);
+  const [selectedPoint, setSelectedPoint] = useState<Point | undefined>(undefined);
+
+  useEffect(() => {
+    const def = CITY_MAP[currentCityKey];
+    const nearest = getNearestCity(def.lat, def.lng);
+    setCurrentCityKey(nearest.key);
+    setCurrentCity(nearest);
+  }, []);
+
+  useEffect(() => {
+    setCurrentCity(CITY_MAP[currentCityKey]);
+  }, [currentCityKey]);
+
   return (
     <div className="page page--gray page--main">
       <main className="page__main page__main--index">
@@ -11,22 +31,17 @@ export function MainPage({ offers }: { offers: Offer[] }): JSX.Element {
         <div className="tabs">
           <section className="locations container">
             <ul className="locations__list tabs__list">
-              {[
-                'Paris',
-                'Cologne',
-                'Brussels',
-                'Amsterdam',
-                'Hamburg',
-                'Dusseldorf',
-              ].map((city) => (
-                <li className="locations__item" key={Math.random().toString()}>
+              {CITY_KEYS.map((key) => (
+                <li className="locations__item" key={key}>
                   <a
-                    className={`locations__item-link tabs__item ${
-                      city === 'Amsterdam' ? 'tabs__item--active' : ''
-                    }`}
-                    href="#"
+                    className={`locations__item-link tabs__item ${key === currentCityKey ? 'tabs__item--active' : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentCityKey(key);
+                    }}
+                    href={`#${key}`}
                   >
-                    <span>{city}</span>
+                    <span>{CITY_MAP[key].title}</span>
                   </a>
                 </li>
               ))}
@@ -38,8 +53,7 @@ export function MainPage({ offers }: { offers: Offer[] }): JSX.Element {
             <section className="cities__places places">
               <h2 className="visually-hidden">Places</h2>
               <b className="places__found">
-                {offers.length} place{offers.length > 1 ? 's' : ''} to stay in
-                Amsterdam
+                {offers.length} place{offers.length > 1 ? 's' : ''} to stay in {currentCity.title}
               </b>
               <form className="places__sorting" action="#" method="get">
                 <span className="places__sorting-caption">Sort by</span>
@@ -50,10 +64,7 @@ export function MainPage({ offers }: { offers: Offer[] }): JSX.Element {
                   </svg>
                 </span>
                 <ul className="places__options places__options--custom places__options--opened">
-                  <li
-                    className="places__option places__option--active"
-                    tabIndex={0}
-                  >
+                  <li className="places__option places__option--active" tabIndex={0}>
                     Popular
                   </li>
                   <li className="places__option" tabIndex={0}>
@@ -70,7 +81,16 @@ export function MainPage({ offers }: { offers: Offer[] }): JSX.Element {
               <OffersComponent offers={offers} />
             </section>
             <div className="cities__right-section">
-              <section className="cities__map map"></section>
+              <section className="cities__map ">
+                <div id="map">
+                  <Map
+                    city={currentCity}
+                    points={pinList}
+                    selectedPoint={selectedPoint}
+                    onMarkerClick={setSelectedPoint}
+                  />
+                </div>
+              </section>
             </div>
           </div>
         </div>
