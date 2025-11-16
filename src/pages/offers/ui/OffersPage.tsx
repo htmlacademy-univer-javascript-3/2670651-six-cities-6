@@ -1,5 +1,5 @@
 // src/pages/offers/ui/OffersPage.tsx
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { formatPrice } from '../../../shared/lib/formatPrice';
 import PriceCard from './OffersCard';
 import CommentForm from '../../../shared/ui/Comment/CommentForm';
@@ -14,9 +14,6 @@ import {
 } from '../../../shared/api/client';
 
 const isAuthenticated = true;
-
-const isSamePoint = (a?: Point, b?: Point) =>
-  !!a && !!b && a.lat === b.lat && a.lng === b.lng;
 
 export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
   const {
@@ -42,14 +39,14 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
     }
     const def = CITY_MAP.AMSTERDAM;
     return getNearestCity(def.lat, def.lng);
-  }, [offer?.city?.name]);
+  }, [offer]);
 
   const displayedOffers = useMemo(
-    () => nearbyOffers.slice(0, 3),
+    () => nearbyOffers,
     [nearbyOffers]
   );
 
-  const points = useMemo<Point[]>(
+  const nearbyPoints = useMemo<Point[]>(
     () =>
       displayedOffers.map((o) => ({
         title: o.city.name,
@@ -59,26 +56,32 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
     [displayedOffers]
   );
 
-  const firstPoint: Point = useMemo(() => {
-    if (points.length > 0) {
-      return points[0];
-    }
-    return {
-      title: currentCity.title,
-      lat: currentCity.lat,
-      lng: currentCity.lng,
-    };
-  }, [points, currentCity]);
+  const offerPoint: Point = useMemo(
+    () =>
+      offer
+        ? {
+          title: offer.title,
+          lat: offer.location.latitude,
+          lng: offer.location.longitude,
+        }
+        : {
+          title: currentCity.title,
+          lat: currentCity.lat,
+          lng: currentCity.lng,
+        },
+    [offer, currentCity]
+  );
 
-  const [selectedPoint, setSelectedPoint] = useState<Point>(firstPoint);
+  const points = useMemo<Point[]>(
+    () => [offerPoint, ...nearbyPoints],
+    [offerPoint, nearbyPoints]
+  );
+
+  const [selectedPoint, setSelectedPoint] = useState<Point>(offerPoint);
 
   useEffect(() => {
-    if (!isSamePoint(selectedPoint, firstPoint)) {
-      setSelectedPoint(firstPoint);
-    }
-  }, [firstPoint.lat, firstPoint.lng]);
-
-  const handleMarkerClick = useCallback((p: Point) => setSelectedPoint(p), []);
+    setSelectedPoint(offerPoint);
+  }, [offerPoint]);
 
   if (!id) {
     return (
@@ -116,7 +119,7 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
         <section className="offer">
           <div className="offer__gallery-container container">
             <div className="offer__gallery">
-              {(offer.images ?? []).map((image) => (
+              {(offer.images ?? []).slice(0, 6).map((image) => (
                 <div className="offer__image-wrapper" key={image}>
                   <img
                     className="offer__image"
@@ -163,10 +166,10 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
                   {offer.type}
                 </li>
                 <li className="offer__feature offer__feature--bedrooms">
-                  {offer.bedrooms}
+                  {offer.bedrooms} Bedroom{offer.bedrooms === 1 ? '' : 's'}
                 </li>
                 <li className="offer__feature offer__feature--adults">
-                  {offer.maxAdults}
+                  Max {offer.maxAdults} adult{offer.maxAdults === 1 ? '' : 's'}
                 </li>
               </ul>
 
@@ -220,7 +223,7 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
 
               {isAuthenticated && (
                 <section style={{ marginBottom: '2rem' }}>
-                  <CommentForm />
+                  <CommentForm offerId={offer.id} />
                 </section>
               )}
             </div>
@@ -232,7 +235,7 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
                 city={currentCity}
                 points={points}
                 selectedPoint={selectedPoint}
-                onMarkerClick={handleMarkerClick}
+                onMarkerClick={setSelectedPoint}
               />
             )}
           </section>
@@ -244,7 +247,7 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
               Other places in the neighbourhood
             </h2>
             <div className="near-places__list places__list">
-              {nearbyOffers.slice(0, 3).map((nearbyOffer) => (
+              {nearbyOffers.map((nearbyOffer) => (
                 <PriceCard key={nearbyOffer.id} {...nearbyOffer} />
               ))}
             </div>

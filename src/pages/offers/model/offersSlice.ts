@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-
-import { offersApi } from '../../../shared/api/client';
+import type { AxiosInstance } from 'axios';
+import { ENDPOINTS } from '../../../shared/api/client';
 import { Offer } from './types/offer';
 
 type OffersState = {
@@ -15,9 +15,20 @@ const initialState: OffersState = {
   error: null,
 };
 
-export const fetchOffers = createAsyncThunk('offers/fetchAll', async () => {
-  const res = await offersApi.getAllOffers();
-  return res;
+export const fetchOffers = createAsyncThunk<
+  Offer[],
+  void,
+  { extra: AxiosInstance; rejectValue: string }
+>('offers/fetchAll', async (_arg, { extra: api, rejectWithValue }) => {
+  try {
+    const response = await api.get<Offer[]>(ENDPOINTS.OFFERS);
+    return response.data;
+  } catch (error) {
+    if (error instanceof Error) {
+      return rejectWithValue(error.message);
+    }
+    return rejectWithValue('Failed to load offers');
+  }
 });
 
 const offersSlice = createSlice({
@@ -35,7 +46,7 @@ const offersSlice = createSlice({
     });
     b.addCase(fetchOffers.rejected, (s, a) => {
       s.loading = false;
-      s.error = a.error.message ?? 'Failed';
+      s.error = a.payload ?? a.error.message ?? 'Failed';
     });
   },
 });

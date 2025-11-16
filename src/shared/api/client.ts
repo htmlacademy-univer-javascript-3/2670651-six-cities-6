@@ -1,5 +1,4 @@
 // src/shared/api/client.ts
-import axios from 'axios';
 import { createApi } from '@reduxjs/toolkit/query/react';
 import type { BaseQueryFn } from '@reduxjs/toolkit/query';
 import type { AxiosRequestConfig, AxiosError } from 'axios';
@@ -7,11 +6,7 @@ import type { AxiosRequestConfig, AxiosError } from 'axios';
 import type { Offer } from '../../pages/offers/model/types/offer';
 import type { CommentDTO, Review } from '../types/comments';
 import { OfferPage } from '../../pages/offers/model/types/offers-page';
-
-export const API_CONFIG = {
-  BASE_URL: 'https://14.design.htmlacademy.pro/six-cities',
-  TIMEOUT: 5000,
-} as const;
+import { apiClient } from './api';
 
 export enum ENDPOINTS {
   MAIN = '/',
@@ -22,18 +17,7 @@ export enum ENDPOINTS {
   LOGOUT = '/logout',
 }
 
-// 1) ЕДИНСТВЕННЫЙ axios-клиент
-export const apiClient = axios.create({
-  baseURL: API_CONFIG.BASE_URL,
-  timeout: API_CONFIG.TIMEOUT,
-  headers: {
-    'X-Token':
-      localStorage.getItem('x-token') || 'T2xpdmVyLmNvbm5lckBnbWFpbC5jb20=',
-    'Content-Type': 'application/json',
-  },
-});
 
-// 2) Базовый адаптер под RTK Query (axios)
 export const axiosBaseQuery =
   (): BaseQueryFn<
     {
@@ -62,48 +46,62 @@ export const axiosBaseQuery =
       }
     };
 
-// 3) OFFERS API на RTK Query (использует axiosBaseQuery)
+
 export const offersApi = createApi({
   reducerPath: 'offersApi',
   baseQuery: axiosBaseQuery(),
   tagTypes: ['Offers'],
   endpoints: (builder) => ({
-    getAllOffers: builder.query<Offer[], void>({
-      query: () => ({ url: '/offers', method: 'get' }),
-      providesTags: ['Offers'],
-    }),
     getOfferById: builder.query<OfferPage, string>({
       query: (id) => ({ url: `/offers/${id}`, method: 'get' }),
     }),
     getNearbyOffers: builder.query<Offer[], string>({
       query: (id) => ({ url: `/offers/${id}/nearby`, method: 'get' }),
     }),
+    getFavoriteOffers: builder.query<Offer[], void>({
+      query: () => ({ url: '/favorite', method: 'get' }),
+      providesTags: ['Offers'],
+    }),
+    toggleFavorite: builder.mutation<
+      Offer,
+      { offerId: string; status: 0 | 1 }
+    >({
+      query: ({ offerId, status }) => ({
+        url: `/favorite/${offerId}/${status}`,
+        method: 'post',
+      }),
+      invalidatesTags: ['Offers'],
+    }),
   }),
 });
 
 export const {
-  useGetAllOffersQuery,
   useGetOfferByIdQuery,
   useGetNearbyOffersQuery,
+  useGetFavoriteOffersQuery,
+  useToggleFavoriteMutation,
 } = offersApi;
 
-// 4) COMMENTS API на RTK Query (тот же базовый адаптер)
 export const commentsApi = createApi({
   reducerPath: 'commentsApi',
   baseQuery: axiosBaseQuery(),
   tagTypes: ['Comments'],
   endpoints: (builder) => ({
-    // сервер у тебя слушает GET /comment/:id (оставляю как есть)
     getCommentsByOfferId: builder.query<Review[], string>({
-      query: (id) => ({ url: `/comment/${id}`, method: 'get' }),
+      query: (id) => ({ url: `/comments/${id}`, method: 'get' }),
       providesTags: (_, __, id) => [{ type: 'Comments', id }],
     }),
-    // POST /comments/:offerId c payload { data: ... }
-    postNewComment: builder.mutation<CommentDTO,{ offerId: string; data: CommentDTO }>({
+    postNewComment: builder.mutation<
+      Review,
+      { offerId: string; data: CommentDTO }
+    >({
       query: ({ offerId, data }) => ({
         url: `/comments/${offerId}`,
         method: 'post',
-        data: { data },
+        data: {
+          comment: data.comment,
+          rating: data.rating,
+        },
       }),
       invalidatesTags: (_, __, { offerId }) => [
         { type: 'Comments', id: offerId },

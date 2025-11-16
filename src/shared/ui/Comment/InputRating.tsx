@@ -1,10 +1,16 @@
+type RatingInputProps = {
+  rating: number;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+};
+
 export default function RatingInput({
   rating,
+  checked,
+  disabled = false,
   onChange,
-}: {
-  rating: number;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}) {
+}: RatingInputProps) {
   return (
     <>
       <input
@@ -13,6 +19,8 @@ export default function RatingInput({
         value={rating}
         id={`${rating}-stars`}
         type="radio"
+        checked={checked}
+        disabled={disabled}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e)}
       />
       <label

@@ -12,6 +12,7 @@ export const selectCurrentCity = createSelector(
 
 export const selectAllOffers = (s: RootState) => s.offers.items;
 export const selectOffersLoading = (s: RootState) => s.offers.loading;
+export const selectOffersError = (s: RootState) => s.offers.error;
 
 export const selectOffersByCurrentCity = createSelector(
   [selectAllOffers, selectCurrentCity],

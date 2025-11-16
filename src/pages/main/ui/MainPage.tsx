@@ -5,28 +5,29 @@ import Map from '../../../shared/ui/LeafletMap/ui/LeafletMap';
 import OffersComponent from '../../offers/ui/OffersComponent';
 import type { Point } from '../../../shared/types/map';
 import CitiesList from './CitiesList';
+import Spinner from '../../../shared/ui/Spinner/Spinner';
 
 import {
   useAppDispatch,
   useAppSelector,
 } from '../../../shared/lib/hooks/redux';
 
-import { selectCurrentCity, selectSelectedPoint } from '../model/selectors';
+import {
+  selectCurrentCity,
+  selectOffersByCurrentCity,
+  selectOffersLoading,
+  selectSelectedPoint,
+} from '../model/selectors';
 import { cityActions } from '../model/citySlice';
-import { useGetAllOffersQuery } from '../../../shared/api/client';
 
 export function MainPage(): JSX.Element {
   const dispatch = useAppDispatch();
 
   const currentCity = useAppSelector(selectCurrentCity);
   const selectedPointFromState = useAppSelector(selectSelectedPoint);
-
-  const { data: allOffers = [], isLoading, isError } = useGetAllOffersQuery();
-
-  const offersByCity = useMemo(
-    () => allOffers.filter((o) => o.city.name === currentCity.title),
-    [allOffers, currentCity.title]
-  );
+  const offersByCity = useAppSelector(selectOffersByCurrentCity);
+  const isLoading = useAppSelector(selectOffersLoading);
+  const offersError = useAppSelector((state) => state.offers.error);
 
   const autoPoint: Point | undefined = useMemo(() => {
     const o = offersByCity[0];
@@ -67,44 +68,54 @@ export function MainPage(): JSX.Element {
             <section className="cities__places places">
               <h2 className="visually-hidden">Places</h2>
 
-              <b className="places__found">
-                {isLoading && 'Loading…'}
-                {isError && 'Failed to load'}
-                {!isLoading &&
-                  !isError &&
-                  `${offersByCity.length} place${
-                    offersByCity.length > 1 ? 's' : ''
-                  } to stay in ${currentCity.title}`}
-              </b>
+              {isLoading && <Spinner />}
 
-              <form className="places__sorting" action="#" method="get">
-                <span className="places__sorting-caption">Sort by</span>
-                <span className="places__sorting-type" tabIndex={0}>
-                  Popular
-                  <svg className="places__sorting-arrow" width="7" height="4">
-                    <use xlinkHref="#icon-arrow-select"></use>
-                  </svg>
-                </span>
-                <ul className="places__options places__options--custom places__options--opened">
-                  <li
-                    className="places__option places__option--active"
-                    tabIndex={0}
-                  >
-                    Popular
-                  </li>
-                  <li className="places__option" tabIndex={0}>
-                    Price: low to high
-                  </li>
-                  <li className="places__option" tabIndex={0}>
-                    Price: high to low
-                  </li>
-                  <li className="places__option" tabIndex={0}>
-                    Top rated first
-                  </li>
-                </ul>
-              </form>
+              {!isLoading && offersError && (
+                <p className="cities__status">{offersError}</p>
+              )}
 
-              <OffersComponent offers={offersByCity} />
+              {!isLoading && !offersError && (
+                <>
+                  <b className="places__found">
+                    {`${offersByCity.length} place${
+                      offersByCity.length > 1 ? 's' : ''
+                    } to stay in ${currentCity.title}`}
+                  </b>
+
+                  <form className="places__sorting" action="#" method="get">
+                    <span className="places__sorting-caption">Sort by</span>
+                    <span className="places__sorting-type" tabIndex={0}>
+                      Popular
+                      <svg
+                        className="places__sorting-arrow"
+                        width="7"
+                        height="4"
+                      >
+                        <use xlinkHref="#icon-arrow-select"></use>
+                      </svg>
+                    </span>
+                    <ul className="places__options places__options--custom places__options--opened">
+                      <li
+                        className="places__option places__option--active"
+                        tabIndex={0}
+                      >
+                        Popular
+                      </li>
+                      <li className="places__option" tabIndex={0}>
+                        Price: low to high
+                      </li>
+                      <li className="places__option" tabIndex={0}>
+                        Price: high to low
+                      </li>
+                      <li className="places__option" tabIndex={0}>
+                        Top rated first
+                      </li>
+                    </ul>
+                  </form>
+
+                  <OffersComponent offers={offersByCity} />
+                </>
+              )}
             </section>
 
             <div className="cities__right-section">
@@ -114,7 +125,9 @@ export function MainPage(): JSX.Element {
                     city={currentCity}
                     points={points}
                     selectedPoint={selectedPoint}
-                    onMarkerClick={(p) => dispatch(cityActions.setSelectedPoint(p)) }
+                    onMarkerClick={(point) => {
+                      dispatch(cityActions.setSelectedPoint(point));
+                    }}
                   />
                 </div>
               </section>

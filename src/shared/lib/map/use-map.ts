@@ -25,7 +25,7 @@ function useMap(mapRef: MutableRefObject<HTMLElement | null>, city: City): Map |
       setMap(instance);
       isRenderedRef.current = true;
     }
-  }, [mapRef]);
+  }, [city.lat, city.lng, city.zoom, mapRef]);
 
   useEffect(() => {
     if (map) {

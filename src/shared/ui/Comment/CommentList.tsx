@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import CommentCard from './CommentCard';
-
 import { useGetCommentsByOfferIdQuery } from '../../api/client';
+
+const MAX_REVIEWS_TO_DISPLAY = 10;
 
 export default function CommentList({ id }: { id: string | undefined }) {
   const {
@@ -10,6 +12,17 @@ export default function CommentList({ id }: { id: string | undefined }) {
   } = useGetCommentsByOfferIdQuery(id ?? '', {
     skip: !id,
   });
+
+  const preparedReviews = useMemo(
+    () =>
+      [...reviews]
+        .sort(
+          (a, b) =>
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+        )
+        .slice(0, MAX_REVIEWS_TO_DISPLAY),
+    [reviews]
+  );
 
   if (!id) {
     return null;
@@ -22,14 +35,14 @@ export default function CommentList({ id }: { id: string | undefined }) {
   }
 
   return (
-    !!reviews?.length && (
+    !!preparedReviews.length && (
       <section className="offer__reviews reviews">
         <h2 className="reviews__title">
           Reviews &middot;{' '}
           <span className="reviews__amount">{reviews.length}</span>
         </h2>
         <ul className="reviews__list">
-          {reviews.map((comment) => (
+          {preparedReviews.map((comment) => (
             <CommentCard key={comment.id} comment={comment} />
           ))}
         </ul>

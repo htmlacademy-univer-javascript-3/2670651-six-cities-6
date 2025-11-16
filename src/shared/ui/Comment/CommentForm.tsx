@@ -1,89 +1,107 @@
 import { useState } from 'react';
-import { commentsApi } from '../../api/client';
-
-import { offers } from '../../../mock/offers';
-
+import type { ChangeEvent, FormEvent } from 'react';
 import ErrorModal from '../ErrorModal/ErrorModal';
 import RatingInput from './InputRating';
-import { CommentDTO } from '../../types/comments';
+import type { CommentDTO } from '../../types/comments';
+import { usePostNewCommentMutation } from '../../api/client';
 
-export default function CommentForm() {
+type CommentFormProps = {
+  offerId: string;
+};
+
+const MIN_REVIEW_LENGTH = 50;
+const RATINGS = [5, 4, 3, 2, 1];
+
+export default function CommentForm({ offerId }: CommentFormProps) {
   const [formData, setFormData] = useState<CommentDTO>({
     rating: 0,
     comment: '',
-    isFormValid: false,
   });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
 
-    setFormData((prev: CommentDTO) => ({
+  const [postNewComment, { isLoading: isSubmitting }] =
+    usePostNewCommentMutation();
+
+  const handleRatingChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({
       ...prev,
-      [name]: name === 'rating' ? Number(value) : value,
-      isFormValid: name === 'comment' && value.length >= 50 ,
+      rating: Number(event.target.value),
     }));
-
   };
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const handleCommentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    setFormData((prev) => ({
+      ...prev,
+      comment: event.target.value,
+    }));
+  };
+
+  const isSubmitDisabled =
+    isSubmitting ||
+    formData.rating === 0 ||
+    formData.comment.trim().length < MIN_REVIEW_LENGTH;
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!formData.rating || formData.comment.length < 50) {
+    if (isSubmitDisabled) {
       return;
     }
 
-    setIsSubmitting(true);
+    setErrorMessage(null);
 
-    commentsApi
-      .postNewComment(
-        {
-          comment: formData.comment,
+    try {
+      await postNewComment({
+        offerId,
+        data: {
+          comment: formData.comment.trim(),
           rating: formData.rating,
         },
-        offers[0].id
-      )
-      .then(() => {
-        setFormData({ rating: 0, comment: '' });
-      })
-      .catch((error) => {
-        setErrorMessage(`Something went wrong while submitting your review. Try again later. ${error}`);
-      })
-      .finally(() => {
-        setIsSubmitting(false);
+      }).unwrap();
+      setFormData({
+        rating: 0,
+        comment: '',
       });
-  }
+    } catch (error) {
+      const details =
+        error instanceof Error ? ` ${error.message}` : '';
+      setErrorMessage(
+        `Something went wrong while submitting your review. Try again later.${details}`
+      );
+    }
+  };
 
   return (
-    <form className="reviews__form form" onSubmit={handleSubmit}>
-      <label className="reviews__label form__label" htmlFor="review">
+    <form
+      className="reviews__form form"
+      onSubmit={(event) => {
+        void handleSubmit(event);
+      }}
+    >
+      <label className="reviews__label form__label" htmlFor="comment">
         Your review
       </label>
       <div className="reviews__rating-form form__rating">
-        {[5,4,3,2,1].map((rating) => (
+        {RATINGS.map((rating) => (
           <RatingInput
             key={rating}
             rating={rating}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              setFormData({
-                rating: Number(e?.target?.value ?? 0),
-                comment: formData.comment,
-                isFormValid: formData.comment.length >= 50,
-              });
-
-            }}
+            checked={formData.rating === rating}
+            onChange={handleRatingChange}
+            disabled={isSubmitting}
           />
         ))}
       </div>
       <textarea
-        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange(e)}
+        onChange={handleCommentChange}
         className="reviews__textarea form__textarea"
         id="comment"
         name="comment"
         placeholder="Tell how was your stay, what you like and what can be improved"
+        minLength={MIN_REVIEW_LENGTH}
+        value={formData.comment}
+        required
+        disabled={isSubmitting}
       />
       <div className="reviews__button-wrapper">
         <p className="reviews__help">
@@ -94,7 +112,7 @@ export default function CommentForm() {
         <button
           className="reviews__submit form__submit button"
           type="submit"
-          disabled={isSubmitting || !(formData.comment.length >= 50)}
+          disabled={isSubmitDisabled}
         >
           Submit
         </button>
