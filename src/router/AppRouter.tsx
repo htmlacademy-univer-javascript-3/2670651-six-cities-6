@@ -18,12 +18,10 @@ import PrivateRoute from '../shared/lib/privateRoute';
 
 import { ENDPOINTS } from '../shared/api/client';
 
-const isAuthenticated = true;
-
 function RootLayout() {
   return (
     <div className="page">
-      <Header isAuthenticated={isAuthenticated} />
+      <Header />
       <Outlet />
       <Footer />
     </div>
@@ -50,7 +48,7 @@ export function AppRouter() {
           <Route
             path={ENDPOINTS.FAVORITE}
             element={
-              <PrivateRoute isAuthenticated={isAuthenticated}>
+              <PrivateRoute>
                 <FavoritesPage />
               </PrivateRoute>
             }

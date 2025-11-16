@@ -12,10 +12,13 @@ import {
   useGetNearbyOffersQuery,
   useGetOfferByIdQuery,
 } from '../../../shared/api/client';
-
-const isAuthenticated = true;
+import { useAppSelector } from '../../../shared/lib/hooks/redux';
+import { selectAuthorizationStatus } from '../../../features/auth/model/selectors';
+import { AuthorizationStatus } from '../../../shared/types/auth';
 
 export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
+  const authorizationStatus = useAppSelector(selectAuthorizationStatus);
+  const isAuthenticated = authorizationStatus === AuthorizationStatus.Authorized;
   const {
     data: offer,
     isLoading: offerLoading,

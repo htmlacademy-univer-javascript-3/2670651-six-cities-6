@@ -15,6 +15,7 @@ import {
 import {
   selectCurrentCity,
   selectOffersByCurrentCity,
+  selectOffersError,
   selectOffersLoading,
   selectSelectedPoint,
 } from '../model/selectors';
@@ -27,7 +28,7 @@ export function MainPage(): JSX.Element {
   const selectedPointFromState = useAppSelector(selectSelectedPoint);
   const offersByCity = useAppSelector(selectOffersByCurrentCity);
   const isLoading = useAppSelector(selectOffersLoading);
-  const offersError = useAppSelector((state) => state.offers.error);
+  const offersError = useAppSelector(selectOffersError);
 
   const autoPoint: Point | undefined = useMemo(() => {
     const o = offersByCity[0];
