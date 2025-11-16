@@ -1,28 +1,55 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Map from '../../../shared/ui/LeafletMap/ui/LeafletMap';
 import { Offer } from '../../offers/model/types/offer';
 import OffersComponent from '../../offers/ui/OffersComponent';
-import { getNearestCity } from '../../../shared/lib/map/get-nearest-city';
-import { pinList } from '../../../mock/pin-list';
 import type { CityKey, Point } from '../../../shared/types/map';
 import { CITY_KEYS, CITY_MAP } from '../consts/consts';
+import { offersApi } from '../../../shared/api/client';
 
-
-export function MainPage({ offers }: { offers: Offer[] }): JSX.Element {
+export function MainPage(): JSX.Element {
   const [currentCityKey, setCurrentCityKey] = useState<CityKey>('AMSTERDAM');
   const [currentCity, setCurrentCity] = useState(CITY_MAP[currentCityKey]);
-  const [selectedPoint, setSelectedPoint] = useState<Point | undefined>(undefined);
-
+  const [selectedPoint, setSelectedPoint] = useState<Point | undefined>(
+    undefined
+  );
+  const [allOffers, setAllOffers] = useState<Offer[]>([]);
+  const [apiData, setApiData] = useState<Offer[]>([]);
   useEffect(() => {
-    const def = CITY_MAP[currentCityKey];
-    const nearest = getNearestCity(def.lat, def.lng);
-    setCurrentCityKey(nearest.key);
-    setCurrentCity(nearest);
+    offersApi
+      .getAllOffers()
+      .then((response) => setAllOffers(response))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
     setCurrentCity(CITY_MAP[currentCityKey]);
   }, [currentCityKey]);
+
+  useEffect(() => {
+    const filtered = allOffers.filter(
+      (o) => o.city.name === CITY_MAP[currentCityKey].title
+    );
+    setApiData(filtered);
+    if (filtered.length > 0) {
+      setSelectedPoint({
+        lat: filtered[0].location.latitude,
+        lng: filtered[0].location.longitude,
+        title: filtered[0].city.name,
+      });
+    } else {
+      setSelectedPoint(undefined);
+    }
+  }, [allOffers, currentCityKey]);
+
+  const points = useMemo(
+    () =>
+      apiData.map((o) => ({
+        title: `${o.city.name} #${o.id}`,
+        lat: o.location.latitude,
+        lng: o.location.longitude,
+      })),
+    [apiData]
+  );
 
   return (
     <div className="page page--gray page--main">
@@ -34,7 +61,9 @@ export function MainPage({ offers }: { offers: Offer[] }): JSX.Element {
               {CITY_KEYS.map((key) => (
                 <li className="locations__item" key={key}>
                   <a
-                    className={`locations__item-link tabs__item ${key === currentCityKey ? 'tabs__item--active' : ''}`}
+                    className={`locations__item-link tabs__item ${
+                      key === currentCityKey ? 'tabs__item--active' : ''
+                    }`}
                     onClick={(e) => {
                       e.preventDefault();
                       setCurrentCityKey(key);
@@ -53,7 +82,8 @@ export function MainPage({ offers }: { offers: Offer[] }): JSX.Element {
             <section className="cities__places places">
               <h2 className="visually-hidden">Places</h2>
               <b className="places__found">
-                {offers.length} place{offers.length > 1 ? 's' : ''} to stay in {currentCity.title}
+                {apiData.length} place{apiData.length > 1 ? 's' : ''} to stay in{' '}
+                {currentCity.title}
               </b>
               <form className="places__sorting" action="#" method="get">
                 <span className="places__sorting-caption">Sort by</span>
@@ -64,7 +94,10 @@ export function MainPage({ offers }: { offers: Offer[] }): JSX.Element {
                   </svg>
                 </span>
                 <ul className="places__options places__options--custom places__options--opened">
-                  <li className="places__option places__option--active" tabIndex={0}>
+                  <li
+                    className="places__option places__option--active"
+                    tabIndex={0}
+                  >
                     Popular
                   </li>
                   <li className="places__option" tabIndex={0}>
@@ -78,14 +111,14 @@ export function MainPage({ offers }: { offers: Offer[] }): JSX.Element {
                   </li>
                 </ul>
               </form>
-              <OffersComponent offers={offers} />
+              <OffersComponent offers={apiData} />
             </section>
             <div className="cities__right-section">
               <section className="cities__map ">
                 <div id="map">
                   <Map
                     city={currentCity}
-                    points={pinList}
+                    points={points}
                     selectedPoint={selectedPoint}
                     onMarkerClick={setSelectedPoint}
                   />
