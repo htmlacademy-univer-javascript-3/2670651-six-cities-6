@@ -29,25 +29,29 @@ function Map(props: MapProps): JSX.Element {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const map = useMap(mapRef, city);
 
+  const isSamePoint = (a?: Point, b?: Point) =>
+    !!a && !!b && a.lat === b.lat && a.lng === b.lng;
+
   useEffect(() => {
     if (!map) {
       return;
     }
+
     const markerLayer = layerGroup().addTo(map);
     const bounds = new LatLngBounds([]);
 
     points.forEach((point) => {
       const marker = new Marker({ lat: point.lat, lng: point.lng });
+
       marker
         .setIcon(
-          selectedPoint && point.title === selectedPoint.title
+          isSamePoint(point, selectedPoint)
             ? currentCustomIcon
             : defaultCustomIcon
         )
         .addTo(markerLayer)
-        .on('click', () => {
-          onMarkerClick?.(point);
-        });
+        .on('click', () => onMarkerClick?.(point));
+
       bounds.extend([point.lat, point.lng]);
     });
 

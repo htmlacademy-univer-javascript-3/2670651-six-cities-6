@@ -1,7 +1,12 @@
-import axios, { AxiosResponse } from 'axios';
-import { Offer } from '../../pages/offers/model/types/offer';
+// src/shared/api/client.ts
+import axios from 'axios';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import type { BaseQueryFn } from '@reduxjs/toolkit/query';
+import type { AxiosRequestConfig, AxiosError } from 'axios';
+
+import type { Offer } from '../../pages/offers/model/types/offer';
+import type { CommentDTO, Review } from '../types/comments';
 import { OfferPage } from '../../pages/offers/model/types/offers-page';
-import { CommentDTO, Review } from '../../pages/offers/model/types/comments';
 
 export const API_CONFIG = {
   BASE_URL: 'https://14.design.htmlacademy.pro/six-cities',
@@ -17,8 +22,10 @@ export enum ENDPOINTS {
   LOGOUT = '/logout',
 }
 
-const apiClient = axios.create({
+// 1) ЕДИНСТВЕННЫЙ axios-клиент
+export const apiClient = axios.create({
   baseURL: API_CONFIG.BASE_URL,
+  timeout: API_CONFIG.TIMEOUT,
   headers: {
     'X-Token':
       localStorage.getItem('x-token') || 'T2xpdmVyLmNvbm5lckBnbWFpbC5jb20=',
@@ -26,28 +33,84 @@ const apiClient = axios.create({
   },
 });
 
-export const offersApi = {
-  getAllOffers: (): Promise<Offer[]> =>
-    apiClient.get<Offer[]>('/offers').then((response) => response.data),
+// 2) Базовый адаптер под RTK Query (axios)
+export const axiosBaseQuery =
+  (): BaseQueryFn<
+    {
+      url: string;
+      method?: AxiosRequestConfig['method'];
+      data?: unknown;
+      params?: unknown;
+    },
+    unknown,
+    { status?: number; data?: unknown } | string
+  > =>
+    async ({ url, method = 'get', data, params }) => {
+      try {
+        const result = await apiClient({ url, method, data, params });
+        return { data: result.data };
+      } catch (e) {
+        const err = e as AxiosError;
+        return {
+          error:
+            (err.response && {
+              status: err.response.status,
+              data: err.response.data,
+            }) ||
+            err.message,
+        };
+      }
+    };
 
-  getOfferById: (id: string): Promise<OfferPage> =>
-    apiClient.get<OfferPage>(`/offers/${id}`).then((response) => response.data),
-
-  getNearbyOffers: (id: string): Promise<Offer[]> =>
-    apiClient
-      .get<Offer[]>(`/offers/${id}/nearby`)
-      .then((response) => response.data),
-};
-
-export const commentsApi = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  postNewComment: (data: CommentDTO, offerId: string): Promise<AxiosResponse<CommentDTO, any>> =>
-    apiClient.post<CommentDTO>(`/comments/${offerId}`, {
-      data,
+// 3) OFFERS API на RTK Query (использует axiosBaseQuery)
+export const offersApi = createApi({
+  reducerPath: 'offersApi',
+  baseQuery: axiosBaseQuery(),
+  tagTypes: ['Offers'],
+  endpoints: (builder) => ({
+    getAllOffers: builder.query<Offer[], void>({
+      query: () => ({ url: '/offers', method: 'get' }),
+      providesTags: ['Offers'],
     }),
+    getOfferById: builder.query<OfferPage, string>({
+      query: (id) => ({ url: `/offers/${id}`, method: 'get' }),
+    }),
+    getNearbyOffers: builder.query<Offer[], string>({
+      query: (id) => ({ url: `/offers/${id}/nearby`, method: 'get' }),
+    }),
+  }),
+});
 
-  getCommentById: (id: string): Promise<Review[]> =>
-    apiClient.get<Review[]>(`/comment/${id}`).then((response) => response.data),
-};
+export const {
+  useGetAllOffersQuery,
+  useGetOfferByIdQuery,
+  useGetNearbyOffersQuery,
+} = offersApi;
 
-export { apiClient };
+// 4) COMMENTS API на RTK Query (тот же базовый адаптер)
+export const commentsApi = createApi({
+  reducerPath: 'commentsApi',
+  baseQuery: axiosBaseQuery(),
+  tagTypes: ['Comments'],
+  endpoints: (builder) => ({
+    // сервер у тебя слушает GET /comment/:id (оставляю как есть)
+    getCommentsByOfferId: builder.query<Review[], string>({
+      query: (id) => ({ url: `/comment/${id}`, method: 'get' }),
+      providesTags: (_, __, id) => [{ type: 'Comments', id }],
+    }),
+    // POST /comments/:offerId c payload { data: ... }
+    postNewComment: builder.mutation<CommentDTO,{ offerId: string; data: CommentDTO }>({
+      query: ({ offerId, data }) => ({
+        url: `/comments/${offerId}`,
+        method: 'post',
+        data: { data },
+      }),
+      invalidatesTags: (_, __, { offerId }) => [
+        { type: 'Comments', id: offerId },
+      ],
+    }),
+  }),
+});
+
+export const { useGetCommentsByOfferIdQuery, usePostNewCommentMutation } =
+  commentsApi;
