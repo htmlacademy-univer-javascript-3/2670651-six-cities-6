@@ -2,14 +2,16 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { rootReducer } from './reducer';
 import { commentsApi, offersApi } from '../../../shared/api/client';
+import { apiClient } from '../../../shared/api/api';
 
 export const store = configureStore({
   reducer: rootReducer,
   middleware: (getDefault) =>
-    getDefault().concat(
-      offersApi.middleware,
-      commentsApi.middleware
-    ),
+    getDefault({
+      thunk: {
+        extraArgument: apiClient,
+      },
+    }).concat(offersApi.middleware, commentsApi.middleware),
   devTools: false,
 });
 

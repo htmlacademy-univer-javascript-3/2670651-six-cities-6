@@ -36,4 +36,7 @@ function CitiesListBase(): JSX.Element {
   );
 }
 
-export default memo(CitiesListBase);
+const CitiesList = memo(CitiesListBase);
+CitiesList.displayName = 'CitiesList';
+
+export default CitiesList;

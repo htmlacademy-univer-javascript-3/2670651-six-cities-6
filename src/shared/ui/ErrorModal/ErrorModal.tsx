@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import type { MouseEvent } from 'react';
 
 type ErrorModalProps = {
   message: string;
@@ -8,14 +9,18 @@ type ErrorModalProps = {
 export default function ErrorModal({ message, onClose }: ErrorModalProps) {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+      }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) onClose();
+  const handleOverlayClick = (e: MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
   };
 
   return (
