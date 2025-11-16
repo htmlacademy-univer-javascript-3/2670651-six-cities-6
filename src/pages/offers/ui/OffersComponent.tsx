@@ -9,8 +9,7 @@ export default function OffersComponent({ offers }: { offers: Offer[] }) {
     if (currentOffer) {
       // // eslint-disable-next-line no-alert
       // alert(`Current offer: ${currentOffer.title}`);
-      // eslint-disable-next-line no-console
-      console.log(currentOffer);
+
     }
   }, [currentOffer]);
   return (
