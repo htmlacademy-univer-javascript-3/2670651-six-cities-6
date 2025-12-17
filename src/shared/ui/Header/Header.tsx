@@ -75,7 +75,7 @@ export function Header(): JSX.Element {
                             alt={user.name}
                             style={{
                               width: '40px',
-                              height: '40px',
+
                               borderRadius: '50%',
                             }}
                           />

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { Icon, Marker, layerGroup, LatLngBounds } from 'leaflet';
 import useMap from '../../../lib/map/use-map';
 import type { City, Points, Point } from '../../../types/map';
@@ -24,13 +24,18 @@ const currentCustomIcon = new Icon({
   iconAnchor: [20, 40],
 });
 
-function Map(props: MapProps): JSX.Element {
+const areSamePoint = (a?: Point, b?: Point): boolean =>
+  !!a && !!b && a.lat === b.lat && a.lng === b.lng;
+
+function LeafletMapBase(props: MapProps): JSX.Element {
   const { city, points, selectedPoint, onMarkerClick } = props;
   const mapRef = useRef<HTMLDivElement | null>(null);
   const map = useMap(mapRef, city);
 
-  const isSamePoint = (a?: Point, b?: Point) =>
-    !!a && !!b && a.lat === b.lat && a.lng === b.lng;
+  const markerLayerRef = useRef<ReturnType<typeof layerGroup> | null>(null);
+  const markersRef = useRef<Marker[]>([]);
+  const pointsRef = useRef<Points>([]);
+  const onMarkerClickRef = useRef<MapProps['onMarkerClick']>();
 
   useEffect(() => {
     if (!map) {
@@ -38,20 +43,39 @@ function Map(props: MapProps): JSX.Element {
     }
 
     const markerLayer = layerGroup().addTo(map);
+    markerLayerRef.current = markerLayer;
+
+    return () => {
+      map.removeLayer(markerLayer);
+      markerLayerRef.current = null;
+      markersRef.current = [];
+      pointsRef.current = [];
+    };
+  }, [map]);
+
+  useEffect(() => {
+    onMarkerClickRef.current = onMarkerClick;
+  }, [onMarkerClick]);
+
+  useEffect(() => {
+    if (!map || !markerLayerRef.current) {
+      return;
+    }
+
+    const markerLayer = markerLayerRef.current;
+    markerLayer.clearLayers();
+    markersRef.current = [];
+    pointsRef.current = points;
+
     const bounds = new LatLngBounds([]);
 
     points.forEach((point) => {
       const marker = new Marker({ lat: point.lat, lng: point.lng });
-
       marker
-        .setIcon(
-          isSamePoint(point, selectedPoint)
-            ? currentCustomIcon
-            : defaultCustomIcon
-        )
         .addTo(markerLayer)
-        .on('click', () => onMarkerClick?.(point));
+        .on('click', () => onMarkerClickRef.current?.(point));
 
+      markersRef.current.push(marker);
       bounds.extend([point.lat, point.lng]);
     });
 
@@ -60,27 +84,30 @@ function Map(props: MapProps): JSX.Element {
     } else {
       map.setView({ lat: city.lat, lng: city.lng }, city.zoom);
     }
-
-    return () => {
-      map.removeLayer(markerLayer);
-    };
-  }, [
-    map,
-    points,
-    selectedPoint,
-    onMarkerClick,
-    city.lat,
-    city.lng,
-    city.zoom,
-  ]);
+  }, [map, points, city.lat, city.lng, city.zoom]);
 
   useEffect(() => {
-    if (map && selectedPoint) {
-      map.panTo({ lat: selectedPoint.lat, lng: selectedPoint.lng });
-    }
-  }, [map, selectedPoint]);
+    const currentPoints = pointsRef.current;
+    const markers = markersRef.current;
 
-  return <div style={{ height: '600px' }} ref={mapRef}></div>;
+    if (!markers.length || !currentPoints.length) {
+      return;
+    }
+
+    markers.forEach((marker, index) => {
+      const point = currentPoints[index];
+      marker.setIcon(
+        areSamePoint(point, selectedPoint)
+          ? currentCustomIcon
+          : defaultCustomIcon
+      );
+    });
+  }, [selectedPoint, points]);
+
+  return <div style={{ height: '600px' }} ref={mapRef} />;
 }
 
-export default Map;
+const LeafletMap = memo(LeafletMapBase);
+LeafletMap.displayName = 'LeafletMap';
+
+export default LeafletMap;

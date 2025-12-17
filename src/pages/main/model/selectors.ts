@@ -1,6 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '../../../providers/StoreProvider/config/store';
 import { CITY_MAP } from '../consts/consts';
+import type { Point } from '../../../shared/types/map';
 
 export const selectCityKey = (s: RootState) => s.city.currentCityKey;
 export const selectSelectedPoint = (s: RootState) => s.city.selectedPoint;
@@ -17,6 +18,16 @@ export const selectOffersError = (s: RootState) => s.offers.error;
 export const selectOffersByCurrentCity = createSelector(
   [selectAllOffers, selectCurrentCity],
   (offers, city) => offers.filter((o) => o.city.name === city.title)
+);
+
+export const selectOfferPointsByCurrentCity = createSelector(
+  [selectOffersByCurrentCity],
+  (offers): Point[] =>
+    offers.map((offer) => ({
+      title: `${offer.city.name} #${offer.id}`,
+      lat: offer.location.latitude,
+      lng: offer.location.longitude,
+    }))
 );
 
 export const selectFirstPointByCity = createSelector(

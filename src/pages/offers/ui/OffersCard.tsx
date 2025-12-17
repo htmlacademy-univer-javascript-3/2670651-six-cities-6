@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Offer } from '../model/types/offer';
 
@@ -6,7 +7,7 @@ export interface PriceCardProps extends Offer {
   isHorizontal?: boolean;
 }
 
-export default function PriceCard({
+function PriceCardBase({
   price,
   type,
   title,
@@ -23,7 +24,7 @@ export default function PriceCard({
       className={`near-places__card place-card d-flex ${
         isHorizontal ? 'flex-row' : 'flex-column'
       }`}
-      onMouseOver={onMouseOver}
+      onMouseEnter={onMouseOver}
     >
       {isPremium && (
         <div className="place-card__mark">
@@ -86,3 +87,8 @@ export default function PriceCard({
     </article>
   );
 }
+
+const PriceCard = memo(PriceCardBase);
+PriceCard.displayName = 'PriceCard';
+
+export default PriceCard;

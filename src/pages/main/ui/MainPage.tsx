@@ -1,6 +1,6 @@
 // src/pages/main/ui/MainPage.tsx
 
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 import Map from '../../../shared/ui/LeafletMap/ui/LeafletMap';
 import OffersComponent from '../../offers/ui/OffersComponent';
 import type { Point } from '../../../shared/types/map';
@@ -15,6 +15,7 @@ import {
 import {
   selectCurrentCity,
   selectAllOffers,
+  selectOfferPointsByCurrentCity,
   selectOffersByCurrentCity,
   selectOffersError,
   selectOffersLoading,
@@ -22,6 +23,7 @@ import {
 } from '../model/selectors';
 import { cityActions } from '../model/citySlice';
 import { fetchOffers } from '../../offers/model/offersSlice';
+import type { Offer } from '../../offers/model/types/offer';
 
 export function MainPage(): JSX.Element {
   const dispatch = useAppDispatch();
@@ -30,6 +32,7 @@ export function MainPage(): JSX.Element {
   const allOffers = useAppSelector(selectAllOffers);
   const selectedPointFromState = useAppSelector(selectSelectedPoint);
   const offersByCity = useAppSelector(selectOffersByCurrentCity);
+  const points = useAppSelector(selectOfferPointsByCurrentCity);
   const isLoading = useAppSelector(selectOffersLoading);
   const offersError = useAppSelector(selectOffersError);
 
@@ -39,27 +42,28 @@ export function MainPage(): JSX.Element {
     }
   }, [allOffers.length, dispatch, isLoading, offersError]);
 
-  const autoPoint: Point | undefined = useMemo(() => {
-    const o = offersByCity[0];
-    return o
-      ? {
-        lat: o.location.latitude,
-        lng: o.location.longitude,
-        title: o.city.name,
-      }
-      : undefined;
-  }, [offersByCity]);
+  const handleOfferMouseEnter = useCallback(
+    (offer: Offer) => {
+      dispatch(
+        cityActions.setSelectedPoint({
+          lat: offer.location.latitude,
+          lng: offer.location.longitude,
+          title: `${offer.city.name} #${offer.id}`,
+        })
+      );
+    },
+    [dispatch]
+  );
 
-  const selectedPoint = selectedPointFromState ?? autoPoint;
+  const handleOffersMouseLeave = useCallback(() => {
+    dispatch(cityActions.setSelectedPoint(undefined));
+  }, [dispatch]);
 
-  const points = useMemo(
-    () =>
-      offersByCity.map((o) => ({
-        title: `${o.city.name} #${o.id}`,
-        lat: o.location.latitude,
-        lng: o.location.longitude,
-      })),
-    [offersByCity]
+  const handleMarkerClick = useCallback(
+    (point: Point) => {
+      dispatch(cityActions.setSelectedPoint(point));
+    },
+    [dispatch]
   );
 
   return (
@@ -123,7 +127,11 @@ export function MainPage(): JSX.Element {
                     </ul>
                   </form>
 
-                  <OffersComponent offers={offersByCity} />
+                  <OffersComponent
+                    offers={offersByCity}
+                    onOfferMouseEnter={handleOfferMouseEnter}
+                    onOffersMouseLeave={handleOffersMouseLeave}
+                  />
                 </>
               )}
             </section>
@@ -134,10 +142,8 @@ export function MainPage(): JSX.Element {
                   <Map
                     city={currentCity}
                     points={points}
-                    selectedPoint={selectedPoint}
-                    onMarkerClick={(point) => {
-                      dispatch(cityActions.setSelectedPoint(point));
-                    }}
+                    selectedPoint={selectedPointFromState}
+                    onMarkerClick={handleMarkerClick}
                   />
                 </div>
               </section>
