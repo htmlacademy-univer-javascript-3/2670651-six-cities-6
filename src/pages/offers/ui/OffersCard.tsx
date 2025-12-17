@@ -1,6 +1,9 @@
-import { memo } from 'react';
-import { Link } from 'react-router-dom';
+import { memo, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Offer } from '../model/types/offer';
+import { ENDPOINTS, useToggleFavoriteMutation } from '../../../shared/api/client';
+import { useAppSelector } from '../../../shared/lib/hooks/redux';
+import { selectIsAuthorized } from '../../../features/auth/model/selectors';
 
 export interface PriceCardProps extends Offer {
   onMouseOver?: () => void;
@@ -19,6 +22,32 @@ function PriceCardBase({
   onMouseOver,
   id,
 }: PriceCardProps): JSX.Element {
+  const navigate = useNavigate();
+  const isAuthorized = useAppSelector(selectIsAuthorized);
+  const [toggleFavorite, { isLoading: isFavoriteUpdating }] =
+    useToggleFavoriteMutation();
+
+  const handleBookmarkClick = useCallback(async () => {
+    if (!isAuthorized) {
+      navigate(ENDPOINTS.LOGIN);
+      return;
+    }
+
+    const status: 0 | 1 = isFavorite ? 0 : 1;
+
+    try {
+      await toggleFavorite({ offerId: id, status }).unwrap();
+    } catch (error) {
+      const httpStatus =
+        error && typeof error === 'object' && 'status' in error
+          ? (error as { status?: number }).status
+          : undefined;
+      if (httpStatus === 401) {
+        navigate(ENDPOINTS.LOGIN);
+      }
+    }
+  }, [id, isAuthorized, isFavorite, navigate, toggleFavorite]);
+
   return (
     <article
       className={`near-places__card place-card d-flex ${
@@ -64,6 +93,10 @@ function PriceCardBase({
               isFavorite ? 'place-card__bookmark-button--active' : ''
             }`}
             type="button"
+            disabled={isFavoriteUpdating}
+            onClick={() => {
+              void handleBookmarkClick();
+            }}
           >
             <svg className="place-card__bookmark-icon" width={18} height={19}>
               <use xlinkHref="#icon-bookmark"></use>

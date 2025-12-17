@@ -1,17 +1,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { AxiosInstance } from 'axios';
-import { ENDPOINTS } from '../../../shared/api/client';
+import { ENDPOINTS, offersApi } from '../../../shared/api/client';
 import { Offer } from './types/offer';
 
 type OffersState = {
   items: Offer[];
   loading: boolean;
+  loaded: boolean;
   error: string | null;
 };
 
 const initialState: OffersState = {
   items: [],
   loading: false,
+  loaded: false,
   error: null,
 };
 
@@ -42,12 +44,25 @@ const offersSlice = createSlice({
     });
     b.addCase(fetchOffers.fulfilled, (s, a) => {
       s.loading = false;
+      s.loaded = true;
       s.items = a.payload;
     });
     b.addCase(fetchOffers.rejected, (s, a) => {
       s.loading = false;
+      s.loaded = true;
       s.error = a.payload ?? a.error.message ?? 'Failed';
     });
+
+    b.addMatcher(
+      offersApi.endpoints.toggleFavorite.matchFulfilled,
+      (state, action) => {
+        const updatedOffer = action.payload;
+        const storedOffer = state.items.find((o) => o.id === updatedOffer.id);
+        if (storedOffer) {
+          storedOffer.isFavorite = updatedOffer.isFavorite;
+        }
+      }
+    );
   },
 });
 

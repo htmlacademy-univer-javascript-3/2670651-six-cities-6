@@ -1,6 +1,6 @@
 // src/pages/offers/ui/OffersPage.tsx
-import { useEffect, useMemo, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { formatPrice } from '../../../shared/lib/formatPrice';
 import PriceCard from './OffersCard';
 import CommentForm from '../../../shared/ui/Comment/CommentForm';
@@ -13,12 +13,14 @@ import {
   ENDPOINTS,
   useGetNearbyOffersQuery,
   useGetOfferByIdQuery,
+  useToggleFavoriteMutation,
 } from '../../../shared/api/client';
 import { useAppSelector } from '../../../shared/lib/hooks/redux';
 import { selectAuthorizationStatus } from '../../../features/auth/model/selectors';
 import { AuthorizationStatus } from '../../../shared/types/auth';
 
 export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
+  const navigate = useNavigate();
   const authorizationStatus = useAppSelector(selectAuthorizationStatus);
   const isAuthenticated = authorizationStatus === AuthorizationStatus.Authorized;
   const {
@@ -33,6 +35,9 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
     isLoading: nearbyLoading,
     isError: nearbyError,
   } = useGetNearbyOffersQuery(id ?? '', { skip: !id });
+
+  const [toggleFavorite, { isLoading: isFavoriteUpdating }] =
+    useToggleFavoriteMutation();
 
   const currentCity = useMemo(() => {
     if (offer?.city?.name) {
@@ -88,6 +93,33 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
   useEffect(() => {
     setSelectedPoint(offerPoint);
   }, [offerPoint]);
+
+  const offerId = offer?.id ?? '';
+  const offerIsFavorite = offer?.isFavorite ?? false;
+
+  const handleOfferBookmarkClick = useCallback(async () => {
+    if (!isAuthenticated) {
+      navigate(ENDPOINTS.LOGIN);
+      return;
+    }
+    if (!offerId) {
+      return;
+    }
+
+    const status: 0 | 1 = offerIsFavorite ? 0 : 1;
+
+    try {
+      await toggleFavorite({ offerId, status }).unwrap();
+    } catch (error) {
+      const httpStatus =
+        error && typeof error === 'object' && 'status' in error
+          ? (error as { status?: number }).status
+          : undefined;
+      if (httpStatus === 401) {
+        navigate(ENDPOINTS.LOGIN);
+      }
+    }
+  }, [isAuthenticated, navigate, offerId, offerIsFavorite, toggleFavorite]);
 
   if (!id) {
     return <Navigate to={ENDPOINTS.NOT_FOUND} replace />;
@@ -156,11 +188,22 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
 
               <div className="offer__name-wrapper">
                 <h1 className="offer__name">{offer.title}</h1>
-                <button className="offer__bookmark-button button" type="button">
+                <button
+                  className={`offer__bookmark-button button ${
+                    offerIsFavorite ? 'offer__bookmark-button--active' : ''
+                  }`}
+                  type="button"
+                  disabled={isFavoriteUpdating}
+                  onClick={() => {
+                    void handleOfferBookmarkClick();
+                  }}
+                >
                   <svg className="offer__bookmark-icon" width="31" height="33">
                     <use xlinkHref="#icon-bookmark"></use>
                   </svg>
-                  <span className="visually-hidden">To bookmarks</span>
+                  <span className="visually-hidden">
+                    {offerIsFavorite ? 'In bookmarks' : 'To bookmarks'}
+                  </span>
                 </button>
               </div>
 

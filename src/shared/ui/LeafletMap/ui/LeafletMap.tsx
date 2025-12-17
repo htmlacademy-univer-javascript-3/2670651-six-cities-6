@@ -27,6 +27,25 @@ const currentCustomIcon = new Icon({
 const areSamePoint = (a?: Point, b?: Point): boolean =>
   !!a && !!b && a.lat === b.lat && a.lng === b.lng;
 
+const areSamePointsList = (a: Points, b: Points): boolean => {
+  if (a === b) {
+    return true;
+  }
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (
+      a[i].lat !== b[i].lat ||
+      a[i].lng !== b[i].lng ||
+      a[i].title !== b[i].title
+    ) {
+      return false;
+    }
+  }
+  return true;
+};
+
 function LeafletMapBase(props: MapProps): JSX.Element {
   const { city, points, selectedPoint, onMarkerClick } = props;
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -59,6 +78,10 @@ function LeafletMapBase(props: MapProps): JSX.Element {
 
   useEffect(() => {
     if (!map || !markerLayerRef.current) {
+      return;
+    }
+
+    if (areSamePointsList(pointsRef.current, points)) {
       return;
     }
 
