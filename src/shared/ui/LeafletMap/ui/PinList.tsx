@@ -11,7 +11,7 @@ function List(props: ListProps): JSX.Element {
 
   const handleListItemHover = (event: MouseEvent<HTMLLIElement>) => {
     event.preventDefault();
-    onListItemHover(event.currentTarget.innerText);
+    onListItemHover(event.currentTarget.textContent ?? '');
   };
 
   return (
