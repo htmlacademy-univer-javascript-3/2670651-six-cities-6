@@ -6,6 +6,7 @@ import {
   Route,
   useParams,
   Outlet,
+  Navigate,
 } from 'react-router-dom';
 import { OffersPage } from '../pages/offers';
 import { MainPage } from '../pages/main';
@@ -31,7 +32,7 @@ function RootLayout() {
 function OfferRoute() {
   const { id } = useParams();
   if (!id) {
-    return <NotFoundPage />;
+    return <Navigate to={ENDPOINTS.NOT_FOUND} replace />;
   }
   return <OffersPage id={id} />;
 }
@@ -45,6 +46,7 @@ export function AppRouter() {
           <Route index element={<MainPage />} />
           <Route path={ENDPOINTS.LOGIN} element={<LoginPage />} />
           <Route path={ENDPOINTS.OFFER} element={<OfferRoute />} />
+          <Route path={ENDPOINTS.NOT_FOUND} element={<NotFoundPage />} />
           <Route
             path={ENDPOINTS.FAVORITE}
             element={
@@ -53,7 +55,10 @@ export function AppRouter() {
               </PrivateRoute>
             }
           />
-          <Route path="*" element={<NotFoundPage />} />
+          <Route
+            path="*"
+            element={<Navigate to={ENDPOINTS.NOT_FOUND} replace />}
+          />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,5 +1,6 @@
 // src/pages/offers/ui/OffersPage.tsx
 import { useEffect, useMemo, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { formatPrice } from '../../../shared/lib/formatPrice';
 import PriceCard from './OffersCard';
 import CommentForm from '../../../shared/ui/Comment/CommentForm';
@@ -9,6 +10,7 @@ import { CITY_MAP, CityKey } from '../../main/consts/consts';
 import { getNearestCity } from '../../../shared/lib/map/get-nearest-city';
 import type { Point } from '../../../shared/types/map';
 import {
+  ENDPOINTS,
   useGetNearbyOffersQuery,
   useGetOfferByIdQuery,
 } from '../../../shared/api/client';
@@ -23,6 +25,7 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
     data: offer,
     isLoading: offerLoading,
     isError: offerError,
+    error: offerQueryError,
   } = useGetOfferByIdQuery(id ?? '', { skip: !id });
 
   const {
@@ -87,13 +90,7 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
   }, [offerPoint]);
 
   if (!id) {
-    return (
-      <div className="page">
-        <main className="page__main page__main--offer">
-          <section className="offer container">Invalid offer id</section>
-        </main>
-      </div>
-    );
+    return <Navigate to={ENDPOINTS.NOT_FOUND} replace />;
   }
 
   if (offerLoading) {
@@ -106,7 +103,18 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
     );
   }
 
-  if (offerError || !offer) {
+  if (offerError) {
+    const status =
+      offerQueryError &&
+      typeof offerQueryError === 'object' &&
+      'status' in offerQueryError
+        ? (offerQueryError as { status?: number }).status
+        : undefined;
+
+    if (status === 404) {
+      return <Navigate to={ENDPOINTS.NOT_FOUND} replace />;
+    }
+
     return (
       <div className="page">
         <main className="page__main page__main--offer">
@@ -114,6 +122,10 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
         </main>
       </div>
     );
+  }
+
+  if (!offer) {
+    return <Navigate to={ENDPOINTS.NOT_FOUND} replace />;
   }
 
   return (
@@ -222,13 +234,9 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
                 )}
               </div>
 
-              <CommentList id={offer.id} />
-
-              {isAuthenticated && (
-                <section style={{ marginBottom: '2rem' }}>
-                  <CommentForm offerId={offer.id} />
-                </section>
-              )}
+              <CommentList id={offer.id}>
+                {isAuthenticated ? <CommentForm offerId={offer.id} /> : null}
+              </CommentList>
             </div>
           </div>
 
