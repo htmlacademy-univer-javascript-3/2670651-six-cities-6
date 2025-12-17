@@ -25,13 +25,12 @@ describe('redux hooks', () => {
       { wrapper }
     );
 
-    expect(result.current.cityKey).toBe('AMSTERDAM');
+    expect(result.current.cityKey).toBe('PARIS');
 
     act(() => {
-      result.current.dispatch(cityActions.setCityKey('PARIS'));
+      result.current.dispatch(cityActions.setCityKey('AMSTERDAM'));
     });
 
-    expect(result.current.cityKey).toBe('PARIS');
+    expect(result.current.cityKey).toBe('AMSTERDAM');
   });
 });
-

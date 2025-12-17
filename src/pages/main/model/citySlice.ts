@@ -7,7 +7,7 @@ type CityState = {
 };
 
 const initialState: CityState = {
-  currentCityKey: 'AMSTERDAM',
+  currentCityKey: 'PARIS',
   selectedPoint: undefined,
 };
 

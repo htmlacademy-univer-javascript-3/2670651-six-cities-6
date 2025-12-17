@@ -108,7 +108,7 @@ function PriceCardBase({
         </div>
         <div className="place-card__rating rating">
           <div className="place-card__stars rating__stars">
-            <span style={{ width: `${(rating / 5) * 100}%` }} />
+            <span style={{ width: `${(Math.round(rating) / 5) * 100}%` }} />
             <span className="visually-hidden">Rating</span>
           </div>
         </div>

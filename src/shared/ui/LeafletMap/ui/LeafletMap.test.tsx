@@ -1,5 +1,6 @@
 import { render, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
 
 import { CITY_MAP } from '../../../../pages/main/consts/consts';
 import type { Points } from '../../../types/map';
@@ -15,20 +16,6 @@ const mapInstance = vi.hoisted(() => ({
 const useMapMock = vi.hoisted(() => vi.fn(() => mapInstance));
 
 const leafletMock = vi.hoisted(() => {
-  const markers: Array<{
-    setIcon: ReturnType<typeof vi.fn>;
-    on: (event: string, cb: () => void) => unknown;
-    addTo: (layer: unknown) => unknown;
-    fire: (event: string) => void;
-  }> = [];
-
-  const markerLayer = {
-    addTo: vi.fn(),
-    clearLayers: vi.fn(),
-  };
-
-  markerLayer.addTo.mockImplementation(() => markerLayer);
-
   class Icon {
     options: { iconUrl: string };
     constructor(options: { iconUrl: string }) {
@@ -36,22 +23,26 @@ const leafletMock = vi.hoisted(() => {
     }
   }
 
+  const markers: Marker[] = [];
+
   class LatLngBounds {
-    constructor(_bounds: unknown[]) {
+    constructor() {
       // noop
     }
+
     extend = vi.fn();
   }
 
   class Marker {
     private handlers: Record<string, () => void> = {};
-    setIcon = vi.fn();
+    setIcon: Mock<[Icon], void>;
 
-    constructor(_coords: unknown) {
+    constructor() {
+      this.setIcon = vi.fn<[Icon], void>();
       markers.push(this);
     }
 
-    addTo(_layer: unknown) {
+    addTo() {
       return this;
     }
 
@@ -64,6 +55,13 @@ const leafletMock = vi.hoisted(() => {
       this.handlers[event]?.();
     }
   }
+
+  const markerLayer = {
+    addTo: vi.fn(),
+    clearLayers: vi.fn(),
+  };
+
+  markerLayer.addTo.mockImplementation(() => markerLayer);
 
   const layerGroup = vi.fn(() => markerLayer);
 
@@ -113,20 +111,14 @@ describe('LeafletMap', () => {
     });
 
     await waitFor(() => {
-      expect(leafletMock.markers[0].setIcon).toHaveBeenCalledWith(
-        expect.objectContaining({
-          options: expect.objectContaining({ iconUrl: URL_MARKER_CURRENT }),
-        })
-      );
-      expect(leafletMock.markers[1].setIcon).toHaveBeenCalledWith(
-        expect.objectContaining({
-          options: expect.objectContaining({ iconUrl: URL_MARKER_DEFAULT }),
-        })
-      );
+      const firstIcon = leafletMock.markers[0].setIcon.mock.calls[0]?.[0];
+      const secondIcon = leafletMock.markers[1].setIcon.mock.calls[0]?.[0];
+
+      expect(firstIcon?.options.iconUrl).toBe(URL_MARKER_CURRENT);
+      expect(secondIcon?.options.iconUrl).toBe(URL_MARKER_DEFAULT);
     });
 
     leafletMock.markers[0].fire('click');
     expect(onMarkerClick).toHaveBeenCalledWith(points[0]);
   });
 });
-

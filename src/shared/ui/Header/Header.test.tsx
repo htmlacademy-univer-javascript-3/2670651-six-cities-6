@@ -39,13 +39,13 @@ const createStore = (status: AuthorizationStatus) =>
         user:
           status === AuthorizationStatus.Authorized
             ? {
-                id: 1,
-                email: 'user@test.dev',
-                name: 'User',
-                avatarUrl: '/img/avatar.jpg',
-                isPro: false,
-                token: 'token',
-              }
+              id: 1,
+              email: 'user@test.dev',
+              name: 'User',
+              avatarUrl: '/img/avatar.jpg',
+              isPro: false,
+              token: 'token',
+            }
             : null,
         error: null,
       },
@@ -116,4 +116,3 @@ describe('Header', () => {
     mock.restore();
   });
 });
-
