@@ -1,6 +1,6 @@
 // src/pages/main/ui/MainPage.tsx
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import Map from '../../../shared/ui/LeafletMap/ui/LeafletMap';
 import OffersComponent from '../../offers/ui/OffersComponent';
 import type { Point } from '../../../shared/types/map';
@@ -14,21 +14,30 @@ import {
 
 import {
   selectCurrentCity,
+  selectAllOffers,
   selectOffersByCurrentCity,
   selectOffersError,
   selectOffersLoading,
   selectSelectedPoint,
 } from '../model/selectors';
 import { cityActions } from '../model/citySlice';
+import { fetchOffers } from '../../offers/model/offersSlice';
 
 export function MainPage(): JSX.Element {
   const dispatch = useAppDispatch();
 
   const currentCity = useAppSelector(selectCurrentCity);
+  const allOffers = useAppSelector(selectAllOffers);
   const selectedPointFromState = useAppSelector(selectSelectedPoint);
   const offersByCity = useAppSelector(selectOffersByCurrentCity);
   const isLoading = useAppSelector(selectOffersLoading);
   const offersError = useAppSelector(selectOffersError);
+
+  useEffect(() => {
+    if (!allOffers.length && !isLoading && !offersError) {
+      dispatch(fetchOffers());
+    }
+  }, [allOffers.length, dispatch, isLoading, offersError]);
 
   const autoPoint: Point | undefined = useMemo(() => {
     const o = offersByCity[0];

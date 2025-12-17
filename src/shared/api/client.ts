@@ -15,6 +15,7 @@ export enum ENDPOINTS {
   FAVORITE = '/favorites',
   LOGIN = '/login',
   LOGOUT = '/logout',
+  NOT_FOUND = '/404',
 }
 
 
