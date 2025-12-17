@@ -1,5 +1,5 @@
 // src/pages/offers/ui/OffersPage.tsx
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { formatPrice } from '../../../shared/lib/formatPrice';
 import PriceCard from './OffersCard';
@@ -87,12 +87,6 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
     () => [offerPoint, ...nearbyPoints],
     [offerPoint, nearbyPoints]
   );
-
-  const [selectedPoint, setSelectedPoint] = useState<Point>(offerPoint);
-
-  useEffect(() => {
-    setSelectedPoint(offerPoint);
-  }, [offerPoint]);
 
   const offerId = offer?.id ?? '';
   const offerIsFavorite = offer?.isFavorite ?? false;
@@ -290,8 +284,7 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
               <Map
                 city={currentCity}
                 points={points}
-                selectedPoint={selectedPoint}
-                onMarkerClick={setSelectedPoint}
+                selectedPoint={offerPoint}
               />
             )}
           </section>
@@ -303,7 +296,7 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
               Other places in the neighbourhood
             </h2>
             <div className="near-places__list places__list">
-              {nearbyOffers.map((nearbyOffer) => (
+              {displayedOffers.map((nearbyOffer) => (
                 <PriceCard key={nearbyOffer.id} {...nearbyOffer} />
               ))}
             </div>

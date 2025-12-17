@@ -19,10 +19,10 @@ describe('CommentCard', () => {
 
     render(<CommentCard comment={review} />);
 
-    const expectedDate = new Date(review.date).toLocaleDateString('ru-RU', {
-      year: 'numeric',
+    const expectedDate = new Intl.DateTimeFormat('en-US', {
       month: 'long',
-    });
+      year: 'numeric',
+    }).format(new Date(review.date));
 
     expect(screen.getByText('Max')).toBeInTheDocument();
     expect(screen.getByText('Great place!')).toBeInTheDocument();

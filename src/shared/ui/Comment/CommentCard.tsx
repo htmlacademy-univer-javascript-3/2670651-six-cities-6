@@ -1,7 +1,7 @@
 import { Review } from '../../types/comments';
 
 export default function CommentCard({ comment }: { comment: Review }) {
-  const date = new Date(comment.date).toLocaleDateString('ru-RU', {
+  const date = new Date(comment.date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
   });
