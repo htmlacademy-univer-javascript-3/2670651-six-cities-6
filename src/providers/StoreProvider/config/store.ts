@@ -12,7 +12,7 @@ export const store = configureStore({
         extraArgument: apiClient,
       },
     }).concat(offersApi.middleware, commentsApi.middleware),
-  devTools: false,
+  devTools: import.meta.env.DEV,
 });
 
 export type RootState = ReturnType<typeof store.getState>;
