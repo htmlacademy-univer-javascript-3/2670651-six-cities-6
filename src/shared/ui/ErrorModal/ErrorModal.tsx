@@ -31,6 +31,7 @@ export default function ErrorModal({ message, onClose }: ErrorModalProps) {
       <div className="bg-white rounded-2xl shadow-lg p-6 w-[90%] max-w-md relative">
         <button
           onClick={onClose}
+          type="button"
           className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl"
           aria-label="Close"
         >
@@ -41,6 +42,7 @@ export default function ErrorModal({ message, onClose }: ErrorModalProps) {
         <button
           onClick={onClose}
           onBlur={onClose}
+          type="button"
           className="w-full py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
         >
           Close
