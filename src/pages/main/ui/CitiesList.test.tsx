@@ -18,17 +18,16 @@ describe('CitiesList', () => {
       </Provider>
     );
 
-    const amsterdam = screen.getByRole('link', { name: 'Amsterdam' });
     const paris = screen.getByRole('link', { name: 'Paris' });
+    const amsterdam = screen.getByRole('link', { name: 'Amsterdam' });
 
-    expect(amsterdam).toHaveClass('tabs__item--active');
-    expect(paris).not.toHaveClass('tabs__item--active');
-
-    await user.click(paris);
-
-    expect(store.getState().city.currentCityKey).toBe('PARIS');
     expect(paris).toHaveClass('tabs__item--active');
     expect(amsterdam).not.toHaveClass('tabs__item--active');
+
+    await user.click(amsterdam);
+
+    expect(store.getState().city.currentCityKey).toBe('AMSTERDAM');
+    expect(amsterdam).toHaveClass('tabs__item--active');
+    expect(paris).not.toHaveClass('tabs__item--active');
   });
 });
-

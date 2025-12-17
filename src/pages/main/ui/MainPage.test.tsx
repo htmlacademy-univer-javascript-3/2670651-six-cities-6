@@ -22,10 +22,10 @@ const createOffer = (partial?: Partial<Offer>): Offer => ({
   price: 100,
   previewImage: 'img.jpg',
   city: {
-    name: 'Amsterdam',
-    location: { latitude: 52.3, longitude: 4.9, zoom: 10 },
+    name: 'Paris',
+    location: { latitude: 48.85, longitude: 2.35, zoom: 10 },
   },
-  location: { latitude: 52.3, longitude: 4.9, zoom: 10 },
+  location: { latitude: 48.85, longitude: 2.35, zoom: 10 },
   isFavorite: false,
   isPremium: false,
   rating: 4,
@@ -74,10 +74,9 @@ describe('MainPage', () => {
     );
 
     expect(
-      screen.getByText('1 place to stay in Amsterdam')
+      screen.getByText('1 place to stay in Paris')
     ).toBeInTheDocument();
     expect(screen.getByTestId('offers-component')).toBeInTheDocument();
     expect(screen.getByTestId('map')).toBeInTheDocument();
   });
 });
-

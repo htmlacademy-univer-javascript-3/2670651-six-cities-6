@@ -53,7 +53,7 @@ describe('CommentForm', () => {
 
     await user.click(screen.getByDisplayValue('5'));
 
-    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
+    const textarea = screen.getByRole<HTMLTextAreaElement>('textbox');
     const comment = `${'a'.repeat(50)}   `;
     await user.type(textarea, comment);
 
@@ -68,9 +68,7 @@ describe('CommentForm', () => {
       expect(textarea.value).toBe('');
     });
 
-    expect((screen.getByDisplayValue('5') as HTMLInputElement).checked).toBe(
-      false
-    );
+    expect(screen.getByDisplayValue<HTMLInputElement>('5').checked).toBe(false);
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   });
 
@@ -102,4 +100,3 @@ describe('CommentForm', () => {
     });
   });
 });
-

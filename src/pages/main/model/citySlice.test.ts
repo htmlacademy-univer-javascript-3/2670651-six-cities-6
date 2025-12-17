@@ -7,7 +7,7 @@ describe('citySlice reducer', () => {
     const state = cityReducer(undefined, { type: 'UNKNOWN' });
 
     expect(state).toEqual({
-      currentCityKey: 'AMSTERDAM',
+      currentCityKey: 'PARIS',
       selectedPoint: undefined,
     });
   });
@@ -15,7 +15,7 @@ describe('citySlice reducer', () => {
   it('should set city key and reset selected point', () => {
     const initialPoint: Point = { lat: 1, lng: 2, title: 'Amsterdam' };
     const initialState = {
-      currentCityKey: 'AMSTERDAM' as const,
+      currentCityKey: 'PARIS' as const,
       selectedPoint: initialPoint,
     };
 
@@ -36,4 +36,3 @@ describe('citySlice reducer', () => {
     expect(state.selectedPoint).toEqual(point);
   });
 });
-

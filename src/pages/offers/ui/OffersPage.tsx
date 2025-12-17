@@ -53,7 +53,7 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
   }, [offer]);
 
   const displayedOffers = useMemo(
-    () => nearbyOffers,
+    () => nearbyOffers.slice(0, 3),
     [nearbyOffers]
   );
 
@@ -210,7 +210,9 @@ export function OffersPage({ id }: { id: string | undefined }): JSX.Element {
               <div className="offer__rating rating">
                 <div className="offer__stars rating__stars">
                   <span
-                    style={{ width: `${((offer.rating ?? 0) / 5) * 100}%` }}
+                    style={{
+                      width: `${((Math.round(offer.rating ?? 0)) / 5) * 100}%`,
+                    }}
                   />
                   <span className="visually-hidden">Rating</span>
                 </div>

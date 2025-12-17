@@ -18,9 +18,8 @@ describe('RatingInput', () => {
   it('respects checked and disabled props', () => {
     render(<RatingInput rating={3} checked disabled onChange={() => undefined} />);
 
-    const input = screen.getByRole('radio') as HTMLInputElement;
+    const input = screen.getByRole<HTMLInputElement>('radio');
     expect(input.checked).toBe(true);
     expect(input.disabled).toBe(true);
   });
 });
-
