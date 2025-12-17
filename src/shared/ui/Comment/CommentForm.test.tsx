@@ -33,11 +33,16 @@ describe('CommentForm', () => {
     expect(submit).toBeDisabled();
 
     const textarea = screen.getByRole('textbox');
-    await user.type(textarea, 'a'.repeat(50));
-    expect(submit).toBeDisabled();
+    expect(textarea).toHaveAttribute('maxLength', '300');
 
+    await user.type(textarea, 'a'.repeat(49));
     const rating5 = screen.getByDisplayValue('5');
     await user.click(rating5);
+    expect(submit).toBeDisabled();
+
+    await user.type(textarea, 'a');
+
+    expect(textarea).toHaveValue('a'.repeat(50));
 
     expect(submit).toBeEnabled();
   });

@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { OfferPage } from '../model/types/offers-page';
 import { authActions } from '../../../features/auth/model/authSlice';
+import type { Offer } from '../model/types/offer';
 import { rootReducer } from '../../../providers/StoreProvider/config/reducer';
 import { AuthorizationStatus } from '../../../shared/types/auth';
 import { OffersPage } from './OffersPage';
@@ -76,6 +77,22 @@ const createStoreWithStatus = (status: AuthorizationStatus) => {
   store.dispatch(authActions.setAuthorizationStatus(status));
   return store;
 };
+
+const createNearbyOffer = (id: string): Offer => ({
+  id,
+  title: `Nearby ${id}`,
+  type: 'apartment',
+  price: 100,
+  previewImage: '/img/preview.jpg',
+  city: {
+    name: 'Amsterdam',
+    location: { latitude: 52.3, longitude: 4.9, zoom: 10 },
+  },
+  location: { latitude: 52.3, longitude: 4.9, zoom: 10 },
+  isFavorite: false,
+  isPremium: false,
+  rating: 4,
+});
 
 describe('OffersPage', () => {
   beforeEach(() => {
@@ -184,5 +201,37 @@ describe('OffersPage', () => {
 
     expect(screen.getByText('Login page')).toBeInTheDocument();
   });
-});
 
+  it('renders only the first 3 nearby offers in the list', () => {
+    apiHooksMock.useGetOfferByIdQuery.mockReturnValue({
+      data: createOfferPage(),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+    });
+    apiHooksMock.useGetNearbyOffersQuery.mockReturnValue({
+      data: [
+        createNearbyOffer('n1'),
+        createNearbyOffer('n2'),
+        createNearbyOffer('n3'),
+        createNearbyOffer('n4'),
+      ],
+      isLoading: false,
+      isError: false,
+    });
+
+    const store = createStoreWithStatus(AuthorizationStatus.Authorized);
+
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={['/offer/offer-1']}>
+          <Routes>
+            <Route path="/offer/offer-1" element={<OffersPage id="offer-1" />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+
+    expect(screen.getAllByTestId('nearby-card')).toHaveLength(3);
+  });
+});

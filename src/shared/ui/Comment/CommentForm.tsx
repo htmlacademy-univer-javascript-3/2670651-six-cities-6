@@ -10,6 +10,7 @@ type CommentFormProps = {
 };
 
 const MIN_REVIEW_LENGTH = 50;
+const MAX_REVIEW_LENGTH = 300;
 const RATINGS = [5, 4, 3, 2, 1];
 
 export default function CommentForm({ offerId }: CommentFormProps) {
@@ -39,7 +40,8 @@ export default function CommentForm({ offerId }: CommentFormProps) {
   const isSubmitDisabled =
     isSubmitting ||
     formData.rating === 0 ||
-    formData.comment.trim().length < MIN_REVIEW_LENGTH;
+    formData.comment.trim().length < MIN_REVIEW_LENGTH ||
+    formData.comment.trim().length > MAX_REVIEW_LENGTH;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -49,12 +51,17 @@ export default function CommentForm({ offerId }: CommentFormProps) {
     }
 
     setErrorMessage(null);
+    const trimmedComment = formData.comment.trim();
+    const length = trimmedComment.length;
+    if (length < MIN_REVIEW_LENGTH || length > MAX_REVIEW_LENGTH) {
+      return;
+    }
 
     try {
       await postNewComment({
         offerId,
         data: {
-          comment: formData.comment.trim(),
+          comment: trimmedComment,
           rating: formData.rating,
         },
       }).unwrap();
@@ -99,6 +106,7 @@ export default function CommentForm({ offerId }: CommentFormProps) {
         name="comment"
         placeholder="Tell how was your stay, what you like and what can be improved"
         minLength={MIN_REVIEW_LENGTH}
+        maxLength={MAX_REVIEW_LENGTH}
         value={formData.comment}
         required
         disabled={isSubmitting}
