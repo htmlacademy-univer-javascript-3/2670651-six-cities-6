@@ -1,6 +1,11 @@
 import { Review } from '../../types/comments';
 
 export default function CommentCard({ comment }: { comment: Review }) {
+  const date = new Date(comment.date).toLocaleDateString('ru-RU', {
+    year: 'numeric',
+    month: 'long',
+  });
+
   return (
     <li className="reviews__item" key={comment.id}>
       <div className="reviews__user user">
@@ -27,7 +32,7 @@ export default function CommentCard({ comment }: { comment: Review }) {
           </div>
         </div>
         <p className="reviews__text">{comment.comment ?? ''}</p>
-        <time className="reviews__time">{comment.date}</time>
+        <time className="reviews__time">{date}</time>
       </div>
     </li>
   );

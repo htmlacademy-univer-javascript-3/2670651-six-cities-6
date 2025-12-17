@@ -55,9 +55,11 @@ export const offersApi = createApi({
   endpoints: (builder) => ({
     getOfferById: builder.query<OfferPage, string>({
       query: (id) => ({ url: `/offers/${id}`, method: 'get' }),
+      providesTags: ['Offers'],
     }),
     getNearbyOffers: builder.query<Offer[], string>({
       query: (id) => ({ url: `/offers/${id}/nearby`, method: 'get' }),
+      providesTags: ['Offers'],
     }),
     getFavoriteOffers: builder.query<Offer[], void>({
       query: () => ({ url: '/favorite', method: 'get' }),

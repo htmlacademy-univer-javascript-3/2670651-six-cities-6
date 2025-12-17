@@ -13,6 +13,7 @@ export const selectCurrentCity = createSelector(
 
 export const selectAllOffers = (s: RootState) => s.offers.items;
 export const selectOffersLoading = (s: RootState) => s.offers.loading;
+export const selectOffersLoaded = (s: RootState) => s.offers.loaded;
 export const selectOffersError = (s: RootState) => s.offers.error;
 
 export const selectOffersByCurrentCity = createSelector(
